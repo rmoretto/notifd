@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "notifd"
+version = "0.0.1"
+dependencies = [
+  "pygobject",
+  "dbus-python",
+  "pillow",
+  "click"
+]
+
+[project.scripts]
+notifd = "notifd:main"
+notifdctl = "notifd:cli"
+
