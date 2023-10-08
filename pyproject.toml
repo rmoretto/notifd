@@ -3,14 +3,28 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "notifd"
+name = "notifd_rmoretto"
 version = "0.0.1"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name="Rodrigo Ce Moretto", email="rodrigo.ce.moretto@gmail.com" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+]
+
 dependencies = [
   "pygobject",
   "dbus-python",
   "pillow",
   "click"
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/rmoretto/notifd"
+"Bug Tracker" = "https://github.com/rmoretto/notifd/issues"
 
 [project.scripts]
 notifd = "notifd:main"
