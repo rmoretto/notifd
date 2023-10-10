@@ -22,6 +22,7 @@ from dbus.mainloop.glib import DBusGMainLoop
 BASE_FOLDER = "/tmp/notify-listener"
 IMAGE_DATA_FOLDER = f"{BASE_FOLDER}/image-datas"
 NOTIFICATIONS_DATA_FILE = f"{BASE_FOLDER}/notifications.json"
+GLOBAL_STATE_FILE = f"{BASE_FOLDER}/global_state.json"
 NOTIFICATION_DATA = {}
 
 NOTIFY_RULES = {
@@ -39,6 +40,13 @@ def handle_ipc_message(message):
         return clear_history()
     elif command == "list":
         return list_history()
+    elif command == "get_notifications_read":
+        return get_notifications_read()
+    elif command == "set_notifications_read":
+        return set_notifications_read()
+    elif command == "get_notifications_read":
+        return get_notifications_read()
+
     else:
         return {
             "error": "invalid_command",
@@ -92,6 +100,28 @@ def list_history():
         "success": True,
         "data": data
     }
+
+def set_notifications_read():
+    global_state_path = Path(GLOBAL_STATE_FILE)
+    global_state_data = json.loads(global_state_path.read_text())
+    global_state_data["notifications_read"] = True
+
+    global_state_path.write_text(json.dumps(global_state_data))
+    return {
+        "success": True,
+        "message": f"Notifications set as read successfully"
+    }
+
+def get_notifications_read():
+    global_state_path = Path(GLOBAL_STATE_FILE)
+    global_state_data = json.loads(global_state_path.read_text())
+    return {
+        "success": True,
+        "data": {
+            "notifications_read": global_state_data["notifications_read"]
+        }
+    }
+
 
 
 def init_ipc_server():
@@ -252,6 +282,11 @@ def notification_callback(_, message):
     notification_data[notification["id"]] = notification
     notification_data_path.write_text(json.dumps(notification_data))
 
+    global_state_path = Path(GLOBAL_STATE_FILE)
+    global_state_data = json.loads(global_state_path.read_text())
+    global_state_data["notifications_read"] = False
+    global_state_path.write_text(json.dumps(global_state_data))
+
 
 def initialize_folders_and_data():
     try:
@@ -267,6 +302,10 @@ def initialize_folders_and_data():
     notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
     if not notification_data_path.exists():
         notification_data_path.write_text("{}")
+
+    global_state_path = Path(GLOBAL_STATE_FILE)
+    if not global_state_path.exists():
+        global_state_path.write_text("{\"notifications_read\": true}")
 
 
 def main():
