@@ -36,6 +36,7 @@ let
 in 
 buildPythonApplication {
   pname = "notifd";
+  version = "0.0.2";
   name = "notifd";
   src = ./..;
   format = "pyproject";
