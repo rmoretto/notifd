@@ -16,6 +16,7 @@ let
       dbus-python
       pillow
       click
+      loguru
       twine
     ]))
   ];

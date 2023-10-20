@@ -19,7 +19,8 @@ dependencies = [
   "pygobject",
   "dbus-python",
   "pillow",
-  "click"
+  "click",
+  "loguru"
 ]
 
 [project.urls]

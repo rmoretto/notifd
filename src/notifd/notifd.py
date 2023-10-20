@@ -1,10 +1,11 @@
 import json
 import os
+import sys
 import string
 import random
 import traceback
 from pathlib import Path
-from pprint import pp
+from pprint import pformat
 from datetime import datetime
 from multiprocessing.connection import Listener
 from threading import Thread
@@ -12,6 +13,8 @@ from threading import Thread
 import click
 import dbus
 import gi
+
+from loguru import logger
 from PIL import Image
 
 gi.require_version("Gtk", "3.0")
@@ -140,14 +143,14 @@ def ipc_main_loop(conn):
             request = conn.recv()
         except EOFError:
             return
-        print("received data", request)
+        logger.info("Received data from IPC server: ", request)
         response = handle_ipc_message(request)
         conn.send(response)
 
 
 def run_ipc_server(ipc_host, ipc_port):
     address = (ipc_host, ipc_port)
-    print(f"Initializing IPC Listener at {address}")
+    logger.info(f"Initializing IPC Listener at {address}")
     listener = Listener(address, authkey=b"notify-history")
     while True:
         conn = listener.accept()
@@ -175,8 +178,8 @@ def save_image_data(notification_id, image_data):
     try:
         img = Image.frombytes(mode, (img_w, img_h), img_data, "raw", mode, img_strides)
     except Exception as exc:
-        print("Error creating image from image-data: ", exc)
-        print(traceback.format_exc())
+        logger.error("Error creating image from image-data: ", exc)
+        logger.error(traceback.format_exc())
         return
 
     image_path = f"{IMAGE_DATA_FOLDER}/{notification_id}.png"
@@ -208,7 +211,7 @@ def get_icon_path(desktop_entry):
             if image_file:
                 return image_file
         except Exception as exc:
-            print(f'Failed to get icon "{desktop_entry}" from {entry}: {str(exc)}')
+            logger.error(f'Failed to get icon "{desktop_entry}" from {entry}: {str(exc)}')
 
 
 def create_random_id():
@@ -280,12 +283,11 @@ def notification_callback(_, message):
     try:
         notification = generate_args_dict(args_list)
     except Exception as exc:
-        print(f"Error on generate_args_dict: {str(exc)}")
-        print(traceback.format_exc())
+        logger.error(f"Error on generate_args_dict: {str(exc)}")
+        logger.error(traceback.format_exc())
         return
 
-    print("Received notification:")
-    pp(notification)
+    logger.info("Received notification:\n", pformat(notification))
 
     notification_data[notification["id"]] = notification
     set_notifications_state(notification_data)
@@ -315,6 +317,16 @@ def initialize_folders_and_data():
         global_state_path.write_text('{"notifications_read": true}')
 
 
+def setup_logger():
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        format="[<green>{time}</green>][<level>{level}</level>] - {message}",
+        colorize=True,
+        level="INFO",
+    )
+
+
 @click.group()
 def main():
     pass
@@ -324,6 +336,7 @@ def main():
 @click.option("--ipc-host", default=IPC_HOST, show_default=True)
 @click.option("--ipc-port", default=IPC_PORT, type=int, show_default=True)
 def run(ipc_host, ipc_port):
+    setup_logger()
     init_ipc_server(ipc_host, ipc_port)
     initialize_folders_and_data()
 
