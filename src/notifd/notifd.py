@@ -18,6 +18,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gio, GLib, Gtk
 from dbus.mainloop.glib import DBusGMainLoop
 
+IPC_HOST = "localhost"
+IPC_PORT = 56789
 
 BASE_FOLDER = "/tmp/notify-listener"
 IMAGE_DATA_FOLDER = f"{BASE_FOLDER}/image-datas"
@@ -148,7 +150,7 @@ def ipc_main_loop(conn):
 
 
 def run_ipc_server():
-    address = ("localhost", 56789)
+    address = (IPC_HOST, IPC_PORT)
     print(f"Initializing IPC Listener at {address}")
     listener = Listener(address, authkey=b"notify-history")
     while True:
