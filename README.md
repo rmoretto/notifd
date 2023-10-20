@@ -27,6 +27,11 @@ Installation:
 pip install notifd
 ```
 
+Run the main service:
+```bash
+$ notifd run
+```
+
 To list all saved notifications sorted from newest to older:
 ```bash
 $ notifdctl list | jq
