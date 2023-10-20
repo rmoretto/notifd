@@ -32,6 +32,26 @@ NOTIFY_RULES = {
 }
 
 
+def fetch_global_state():
+    global_state_path = Path(GLOBAL_STATE_FILE)
+    return json.loads(global_state_path.read_text())
+
+
+def set_global_state(data):
+    global_state_path = Path(GLOBAL_STATE_FILE)
+    global_state_path.write_text(json.dumps(data))
+
+
+def fetch_notifications_state():
+    notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
+    return json.loads(notification_data_path.read_text())
+
+
+def set_notifications_state(data):
+    notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
+    notification_data_path.write_text(json.dumps(data))
+
+
 def handle_ipc_message(message):
     command = message.get("command")
     if command == "pop":
@@ -60,8 +80,7 @@ def pop_history(message):
             "message": "Missing notification id",
         }
 
-    notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
-    notification_data = json.loads(notification_data_path.read_text())
+    notification_data = fetch_notifications_state()
 
     try:
         notification_data.pop(notification_id)
@@ -72,7 +91,7 @@ def pop_history(message):
             "message": f'Notification with ID "{notification_id}" not found',
         }
 
-    notification_data_path.write_text(json.dumps(notification_data))
+    set_notifications_state(notification_data)
     return {
         "success": True,
         "message": f'Notification with ID "{notification_id}" deleted',
@@ -80,15 +99,14 @@ def pop_history(message):
 
 
 def clear_history():
-    notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
-    notification_data_path.write_text("{}")
+    set_notifications_state({})
 
     return {"success": True, "message": "Notification history cleared"}
 
 
 def list_history():
-    notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
-    notification_data = json.loads(notification_data_path.read_text())
+    notification_data = fetch_notifications_state()
+
     data = sorted(
         notification_data.values(), key=lambda i: i["timestamp"], reverse=True
     )
@@ -97,17 +115,16 @@ def list_history():
 
 
 def set_notifications_read():
-    global_state_path = Path(GLOBAL_STATE_FILE)
-    global_state_data = json.loads(global_state_path.read_text())
+    global_state_data = fetch_global_state()
     global_state_data["notifications_read"] = True
+    set_global_state(global_state_data)
 
-    global_state_path.write_text(json.dumps(global_state_data))
     return {"success": True, "message": f"Notifications set as read successfully"}
 
 
 def get_notifications_read():
-    global_state_path = Path(GLOBAL_STATE_FILE)
-    global_state_data = json.loads(global_state_path.read_text())
+    global_state_data = fetch_global_state()
+
     return {
         "success": True,
         "data": {"notifications_read": global_state_data["notifications_read"]},
@@ -254,9 +271,7 @@ def notification_callback(_, message):
     if type(message) != dbus.lowlevel.MethodCallMessage:
         return
 
-    # Read the current notification json
-    notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
-    notification_data = json.loads(notification_data_path.read_text())
+    notification_data = fetch_notifications_state()
 
     args_list = message.get_args_list()
     try:
@@ -268,14 +283,13 @@ def notification_callback(_, message):
 
     print("Received notification:")
     pp(notification)
-    # Write the new notification to the json
-    notification_data[notification["id"]] = notification
-    notification_data_path.write_text(json.dumps(notification_data))
 
-    global_state_path = Path(GLOBAL_STATE_FILE)
-    global_state_data = json.loads(global_state_path.read_text())
+    notification_data[notification["id"]] = notification
+    set_notifications_state(notification_data)
+
+    global_state_data = fetch_global_state()
     global_state_data["notifications_read"] = False
-    global_state_path.write_text(json.dumps(global_state_data))
+    set_global_state(global_state_data)
 
 
 def initialize_folders_and_data():
