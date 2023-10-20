@@ -37,4 +37,9 @@ mkShell {
   ];
 
   buildInputs = [ nativeDeps pythonDeps ];
+
+  shellHook = ''
+    # HACK: go to the user defined shell
+    $SHELL
+  '';
 }

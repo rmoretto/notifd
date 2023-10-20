@@ -48,10 +48,7 @@ def handle_ipc_message(message):
         return get_notifications_read()
 
     else:
-        return {
-            "error": "invalid_command",
-            "message": f"Invalid command \"{command}\""
-        }
+        return {"error": "invalid_command", "message": f'Invalid command "{command}"'}
 
 
 def pop_history(message):
@@ -81,25 +78,23 @@ def pop_history(message):
         "message": f'Notification with ID "{notification_id}" deleted',
     }
 
+
 def clear_history():
     notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
     notification_data_path.write_text("{}")
 
-    return {
-        "success": True,
-        "message": "Notification history cleared"
-    }
+    return {"success": True, "message": "Notification history cleared"}
 
 
 def list_history():
     notification_data_path = Path(NOTIFICATIONS_DATA_FILE)
     notification_data = json.loads(notification_data_path.read_text())
-    data = sorted(notification_data.values(), key=lambda i: i["timestamp"], reverse=True)
+    data = sorted(
+        notification_data.values(), key=lambda i: i["timestamp"], reverse=True
+    )
 
-    return {
-        "success": True,
-        "data": data
-    }
+    return {"success": True, "data": data}
+
 
 def set_notifications_read():
     global_state_path = Path(GLOBAL_STATE_FILE)
@@ -107,21 +102,16 @@ def set_notifications_read():
     global_state_data["notifications_read"] = True
 
     global_state_path.write_text(json.dumps(global_state_data))
-    return {
-        "success": True,
-        "message": f"Notifications set as read successfully"
-    }
+    return {"success": True, "message": f"Notifications set as read successfully"}
+
 
 def get_notifications_read():
     global_state_path = Path(GLOBAL_STATE_FILE)
     global_state_data = json.loads(global_state_path.read_text())
     return {
         "success": True,
-        "data": {
-            "notifications_read": global_state_data["notifications_read"]
-        }
+        "data": {"notifications_read": global_state_data["notifications_read"]},
     }
-
 
 
 def init_ipc_server():
@@ -305,7 +295,7 @@ def initialize_folders_and_data():
 
     global_state_path = Path(GLOBAL_STATE_FILE)
     if not global_state_path.exists():
-        global_state_path.write_text("{\"notifications_read\": true}")
+        global_state_path.write_text('{"notifications_read": true}')
 
 
 def main():

@@ -32,15 +32,18 @@ def clear():
     response = send_ipc_message({"command": "clear"})
     print(json.dumps(response, ensure_ascii=False))
 
+
 @cli.command()
 def list():
     response = send_ipc_message({"command": "list"})
     print(json.dumps(response, ensure_ascii=False))
 
+
 @cli.command()
 def set_notifications_read():
     response = send_ipc_message({"command": "set_notifications_read"})
     print(json.dumps(response, ensure_ascii=False))
+
 
 @cli.command()
 def get_notifications_read():
