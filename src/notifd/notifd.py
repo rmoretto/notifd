@@ -9,6 +9,7 @@ from datetime import datetime
 from multiprocessing.connection import Listener
 from threading import Thread
 
+import click
 import dbus
 import gi
 from PIL import Image
@@ -133,11 +134,6 @@ def get_notifications_read():
     }
 
 
-def init_ipc_server():
-    thread = Thread(target=run_ipc_server)
-    thread.start()
-
-
 def ipc_main_loop(conn):
     while True:
         try:
@@ -149,13 +145,18 @@ def ipc_main_loop(conn):
         conn.send(response)
 
 
-def run_ipc_server():
-    address = (IPC_HOST, IPC_PORT)
+def run_ipc_server(ipc_host, ipc_port):
+    address = (ipc_host, ipc_port)
     print(f"Initializing IPC Listener at {address}")
     listener = Listener(address, authkey=b"notify-history")
     while True:
         conn = listener.accept()
         ipc_main_loop(conn)
+
+
+def init_ipc_server(ipc_host, ipc_port):
+    thread = Thread(target=run_ipc_server, args=(ipc_host, ipc_port))
+    thread.start()
 
 
 def save_image_data(notification_id, image_data):
@@ -314,8 +315,16 @@ def initialize_folders_and_data():
         global_state_path.write_text('{"notifications_read": true}')
 
 
+@click.group()
 def main():
-    init_ipc_server()
+    pass
+
+
+@main.command()
+@click.option("--ipc-host", default=IPC_HOST, show_default=True)
+@click.option("--ipc-port", default=IPC_PORT, type=int, show_default=True)
+def run(ipc_host, ipc_port):
+    init_ipc_server(ipc_host, ipc_port)
     initialize_folders_and_data()
 
     DBusGMainLoop(set_as_default=True)
