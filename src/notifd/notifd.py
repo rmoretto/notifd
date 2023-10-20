@@ -155,7 +155,7 @@ def run_ipc_server(ipc_host, ipc_port):
 
 
 def init_ipc_server(ipc_host, ipc_port):
-    thread = Thread(target=run_ipc_server, args=(ipc_host, ipc_port))
+    thread = Thread(target=run_ipc_server, args=(ipc_host, ipc_port), daemon=True)
     thread.start()
 
 
